@@ -1,2 +1,2 @@
 [build]
-packages = ["google-chrome", "chromium", "chromedriver"]
+packages = ["google-chrome", "chromium", "chromedriver"] 
