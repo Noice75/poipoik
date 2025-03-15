@@ -194,6 +194,7 @@ def setup_driver():
     options.add_argument("--max-connections=5")
     options.add_argument('--disable-blink-features=AutomationControlled')
     options.add_experimental_option('excludeSwitches', ['enable-logging'])
+    options.binary_location = "/nix/store/google-chrome/bin/google-chrome"
     
     # Enable performance logging via CDP
     options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
