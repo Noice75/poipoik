@@ -1,0 +1,19 @@
+# Core dependencies
+requests==2.31.0
+selenium==4.15.2
+beautifulsoup4==4.12.2
+python-dotenv==1.0.0
+webdriver-manager==4.0.1
+
+# Chrome/Chromium dependencies
+# Note: Chromium is managed by webdriver-manager
+
+# Parsing and data handling
+lxml==4.9.3
+urllib3==2.0.7
+
+# Date and time handling
+pytz==2023.3.post1
+
+# Telegram integration
+python-telegram-bot==20.6
