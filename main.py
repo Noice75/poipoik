@@ -1,21 +1,24 @@
 from selenium import webdriver
+from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+import time
 
-# Setup Chrome options for headless mode (important for Railway)
-chrome_options = Options()
-chrome_options.add_argument("--headless")
-chrome_options.add_argument("--no-sandbox")
-chrome_options.add_argument("--disable-dev-shm-usage")
+# Use Selenium Grid URL instead of a local WebDriver
+SELENIUM_GRID_URL = "http://localhost:4444/wd/hub"
 
-# Specify the correct path to chromedriver
-chrome_driver_path = "/usr/local/bin/chromedriver"
-service = Service(chrome_driver_path)
+# Configure Selenium to connect to the Grid
+options = webdriver.ChromeOptions()
+driver = webdriver.Remote(command_executor=SELENIUM_GRID_URL, options=options)
 
-# Start Chrome WebDriver
-driver = webdriver.Chrome(service=service, options=chrome_options)
-
-# Test ChromeDriver
+# Example: Open Google and Search
 driver.get("https://www.google.com")
+search_box = driver.find_element(By.NAME, "q")
+search_box.send_keys("Railway Selenium Hosting")
+search_box.submit()
+
+time.sleep(5)
 print(driver.title)
+
+# Close the browser
 driver.quit()

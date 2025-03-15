@@ -1,14 +1,22 @@
-# Install dependencies
-apt-get update && apt-get install -y wget curl unzip
+# Use Selenium's Standalone Chrome image
+FROM selenium/standalone-chrome:latest
 
-# Install Google Chrome
-wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add -
-echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | tee /etc/apt/sources.list.d/google-chrome.list
-apt-get update && apt-get install -y google-chrome-stable
+# Install Python & Dependencies
+USER root
+RUN apt-get update && apt-get install -y python3 python3-pip
 
-# Install ChromeDriver
-CHROME_VERSION=$(google-chrome --version | awk '{print $3}' | cut -d'.' -f1)
-wget -q "https://chromedriver.storage.googleapis.com/$(curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_VERSION)/chromedriver_linux64.zip" -O chromedriver.zip
-unzip chromedriver.zip
-chmod +x chromedriver
-mv chromedriver /usr/local/bin/
+# Set work directory
+WORKDIR /app
+
+# Copy requirements and install dependencies
+COPY requirements.txt requirements.txt
+RUN pip3 install -r requirements.txt
+
+# Copy the bot script
+COPY bot.py bot.py
+
+# Expose the Selenium port
+EXPOSE 4444
+
+# Start Selenium Grid & Your Script
+CMD ["sh", "-c", "nohup java -jar /opt/selenium/selenium-server.jar standalone & python3 bot.py"]
