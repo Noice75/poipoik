@@ -1,49 +1,14 @@
-# Use a base image with Python
-FROM python:3.12-slim
-
 # Install dependencies
-RUN apt-get update && apt-get install -y \
-    wget \
-    unzip \
-    curl \
-    xvfb \
-    libxi6 \
-    libgconf-2-4 \
-    libnss3 \
-    libxrandr2 \
-    libxss1 \
-    libxcursor1 \
-    libxcomposite1 \
-    libasound2 \
-    libatk1.0-0 \
-    libgbm1 \
-    && rm -rf /var/lib/apt/lists/*
+apt-get update && apt-get install -y wget curl unzip
 
 # Install Google Chrome
-RUN wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
-    && dpkg -i google-chrome-stable_current_amd64.deb || apt-get -fy install
+wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add -
+echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | tee /etc/apt/sources.list.d/google-chrome.list
+apt-get update && apt-get install -y google-chrome-stable
 
 # Install ChromeDriver
-RUN CHROME_DRIVER_VERSION=$(curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE) && \
-    wget -q https://chromedriver.storage.googleapis.com/$CHROME_DRIVER_VERSION/chromedriver_linux64.zip && \
-    unzip chromedriver_linux64.zip && \
-    mv chromedriver /usr/local/bin/ && \
-    chmod +x /usr/local/bin/chromedriver
-
-# Set environment variables
-ENV DISPLAY=:99
-
-# Create and activate virtual environment
-RUN python -m venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
-
-# Install Python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy app code
-COPY . /app
-WORKDIR /app
-
-# Start Xvfb for headless Chrome
-CMD ["bash", "-c", "Xvfb :99 -screen 0 1920x1080x24 & python your_script.py"]
+CHROME_VERSION=$(google-chrome --version | awk '{print $3}' | cut -d'.' -f1)
+wget -q "https://chromedriver.storage.googleapis.com/$(curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_VERSION)/chromedriver_linux64.zip" -O chromedriver.zip
+unzip chromedriver.zip
+chmod +x chromedriver
+mv chromedriver /usr/local/bin/
