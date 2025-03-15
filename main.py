@@ -201,7 +201,7 @@ def setup_driver():
     try:
         # First approach: Use Service with explicit download
         driver_path = ChromeDriverManager().install()
-        service = Service(driver_path)
+        service = Service("/usr/bin/chromedriver")
         driver = webdriver.Chrome(service=service, options=options)
     except Exception as e:
         print(f"First ChromeDriver initialization attempt failed: {e}")
