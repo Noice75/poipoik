@@ -9,11 +9,14 @@ import requests
 from datetime import datetime
 from queue import Queue
 from bs4 import BeautifulSoup
-import undetected_chromedriver as uc
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support import expected_conditions as EC
+from webdriver_manager.chrome import ChromeDriverManager
 import logging.handlers
 from dotenv import load_dotenv
 
@@ -173,8 +176,8 @@ def extract_code_with_regex(url):
         return None
 
 def setup_driver():
-    """Set up and return a Chrome WebDriver with DevTools Protocol enabled using undetected_chromedriver."""
-    options = uc.ChromeOptions()
+    """Set up and return a Chrome WebDriver with DevTools Protocol enabled."""
+    options = Options()
     options.add_argument(f"user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")
     options.add_argument("--start-maximized")
     options.add_argument("--window-size=1920,1080")
@@ -183,28 +186,38 @@ def setup_driver():
     options.add_argument("--disable-gpu")
     options.add_argument("--disable-extensions")
     options.add_argument("--disable-popup-blocking")
+    options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    options.add_experimental_option("useAutomationExtension", False)
     options.add_argument("disable-infobars")
     options.add_argument("--log-level=3")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--max-connections=5")
+    options.add_argument('--disable-blink-features=AutomationControlled')
+    options.add_experimental_option('excludeSwitches', ['enable-logging'])
     
     # Enable performance logging via CDP
     options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
     
     try:
-        # Use undetected_chromedriver instead of standard webdriver
-        driver = uc.Chrome(options=options)
-        driver.set_page_load_timeout(60)
-        driver.set_script_timeout(60)
-        
-        # Execute CDP commands to collect performance logs
-        driver.execute_cdp_cmd("Network.enable", {})
-        driver.execute_cdp_cmd("Performance.enable", {})
-        
-        return driver
+        # First approach: Use Service with explicit download
+        driver_path = ChromeDriverManager().install()
+        service = Service(driver_path)
+        driver = webdriver.Chrome(service=service, options=options)
     except Exception as e:
-        logger.error(f"Error setting up Chrome driver: {e}")
-        return None
+        print(f"First ChromeDriver initialization attempt failed: {e}")
+        try:
+            # Second approach: Simplified initialization
+            driver = webdriver.Chrome(options=options)
+        except Exception as e2:
+            print(f"Second ChromeDriver initialization attempt failed: {e2}")
+            # Third approach: Try with default Service
+            service = Service("/usr/bin/chromedriver")
+            driver = webdriver.Chrome(service=service, options=options)
+    
+    # Set page load timeout
+    driver.set_page_load_timeout(60)
+    
+    return driver
 
 def create_output_directory():
     """Create and return a directory for saving JSON files."""
