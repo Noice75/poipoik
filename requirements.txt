@@ -5,8 +5,9 @@ beautifulsoup4==4.12.2
 python-dotenv==1.0.0
 webdriver-manager==4.0.1
 
-# Chrome/Chromium dependencies
-# Note: Chromium is managed by webdriver-manager
+# Chrome/Chromium alternatives for headless environments
+undetected-chromedriver==3.5.3
+pyvirtualdisplay==3.0
 
 # Parsing and data handling
 lxml==4.9.3

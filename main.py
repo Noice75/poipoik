@@ -181,7 +181,7 @@ def setup_driver():
     options.add_argument(f"user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")
     options.add_argument("--start-maximized")
     options.add_argument("--window-size=1920,1080")
-    options.add_argument("--headless")
+    options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-gpu")
     options.add_argument("--disable-extensions")
@@ -195,29 +195,60 @@ def setup_driver():
     options.add_argument('--disable-blink-features=AutomationControlled')
     options.add_experimental_option('excludeSwitches', ['enable-logging'])
     
+    # Additional options for Docker/NixOS environments
+    options.add_argument("--disable-setuid-sandbox")
+    options.add_argument("--disable-software-rasterizer")
+    options.add_argument("--remote-debugging-port=9222")
+    
     # Enable performance logging via CDP
     options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
     
-    try:
-        # First approach: Use Service with explicit download
-        driver_path = ChromeDriverManager().install()
-        service = Service(driver_path)
-        driver = webdriver.Chrome(service=service, options=options)
-    except Exception as e:
-        print(f"First ChromeDriver initialization attempt failed: {e}")
+    # Check if running in Docker/NixOS environment
+    in_container = os.path.exists("/.dockerenv") or os.environ.get("RAILWAY_STATIC_URL") is not None
+    
+    # Set up virtual display if in container
+    if in_container:
         try:
-            # Second approach: Simplified initialization
-            driver = webdriver.Chrome(options=options)
-        except Exception as e2:
-            print(f"Second ChromeDriver initialization attempt failed: {e2}")
-            # Third approach: Try with default Service
-            service = Service()
-            driver = webdriver.Chrome(service=service, options=options)
+            from pyvirtualdisplay import Display
+            display = Display(visible=0, size=(1920, 1080))
+            display.start()
+            print("Virtual display started successfully")
+        except Exception as e:
+            print(f"Failed to start virtual display: {e}")
     
-    # Set page load timeout
-    driver.set_page_load_timeout(60)
+    # Try multiple approaches to initialize Chrome
+    for attempt in range(1, 5):
+        try:
+            if attempt == 1:
+                # First approach: Use Service with explicit download
+                print(f"Chrome initialization attempt {attempt}: Using ChromeDriverManager")
+                driver_path = ChromeDriverManager().install()
+                service = Service(driver_path)
+                driver = webdriver.Chrome(service=service, options=options)
+            elif attempt == 2:
+                # Second approach: Simplified initialization
+                print(f"Chrome initialization attempt {attempt}: Using simplified initialization")
+                driver = webdriver.Chrome(options=options)
+            elif attempt == 3:
+                # Third approach: Try with default Service
+                print(f"Chrome initialization attempt {attempt}: Using default Service")
+                service = Service()
+                driver = webdriver.Chrome(service=service, options=options)
+            elif attempt == 4:
+                # Fourth approach: Try with undetected-chromedriver
+                print(f"Chrome initialization attempt {attempt}: Using undetected-chromedriver")
+                import undetected_chromedriver as uc
+                driver = uc.Chrome(options=options)
+            
+            # Set page load timeout
+            driver.set_page_load_timeout(60)
+            print(f"Chrome initialized successfully on attempt {attempt}")
+            return driver
+        except Exception as e:
+            print(f"Chrome initialization attempt {attempt} failed: {e}")
     
-    return driver
+    # If all attempts fail, raise exception
+    raise Exception("Failed to initialize Chrome after multiple attempts")
 
 def create_output_directory():
     """Create and return a directory for saving JSON files."""

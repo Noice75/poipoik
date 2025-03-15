@@ -1,0 +1,12 @@
+[build]
+builder = "nixpacks"
+watchPatterns = ["**/*.py", "requirements.txt"]
+
+[deploy]
+startCommand = "Xvfb :99 -screen 0 1024x768x16 & export DISPLAY=:99 && python main.py"
+restartPolicyType = "on_failure"
+healthcheckPath = "/"
+healthcheckTimeout = 300
+
+[variables]
+SERVICE_MODE = "true"
