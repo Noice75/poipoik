@@ -200,8 +200,8 @@ def setup_driver():
     
     try:
         # First approach: Use Service with explicit download
-        driver_path = ChromeDriverManager().install()
-        service = Service("/usr/bin/chromedriver")
+        # driver_path = ChromeDriverManager().install()
+        service = Service("/nix/store/chromedriver/bin/chromedriver")
         driver = webdriver.Chrome(service=service, options=options)
     except Exception as e:
         print(f"First ChromeDriver initialization attempt failed: {e}")
@@ -211,7 +211,7 @@ def setup_driver():
         except Exception as e2:
             print(f"Second ChromeDriver initialization attempt failed: {e2}")
             # Third approach: Try with default Service
-            service = Service("/usr/bin/chromedriver")
+            service = Service("/nix/store/chromedriver/bin/chromedriver")
             driver = webdriver.Chrome(service=service, options=options)
     
     # Set page load timeout

@@ -1,2 +1,2 @@
 [build]
-packages = ["google-chrome", "chromium", "chromedriver"] 
+nixPkgs = ["google-chrome", "chromedriver"]
